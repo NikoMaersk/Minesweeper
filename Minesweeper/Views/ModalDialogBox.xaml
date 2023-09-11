@@ -8,10 +8,10 @@
              d:DesignHeight="450" d:DesignWidth="800" 
              Background="#80000000" 
              Visibility="Collapsed">
-    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Height="250" Width="200">
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Height="250" Width="250">
         <Border Background="White" BorderBrush="Black" BorderThickness="2" CornerRadius="5">
             <StackPanel>
-                <TextBlock Name="messageText" FontSize="18" FontWeight="Bold" Margin="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Name="messageText" FontSize="15" FontWeight="Bold" Margin="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Vertical">
                     <Button x:Name="BtnNewGame" Content="New Game" Width="100" Click="BtnNewGame_Click" Margin="0,0,0,20" Style="{StaticResource ButtonStyle}" Foreground="White"/>
                     <Button x:Name="BtnQuit" Content="Quit" Width="100" Click="BtnQuit_Click" Style="{StaticResource ButtonStyle}" Foreground="White"/>

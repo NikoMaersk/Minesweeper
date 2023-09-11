@@ -2,18 +2,18 @@
 {
     public class Tile
     {
-        public bool HasBomb { get; set; }
+        public bool HasMine { get; set; }
         public bool IsRevealed { get; set; }
-        public bool IsFlagged { get; set; }
-        public int AdjacentBombCount { get; set; }
+        public bool hasFlag { get; set; }
+        public int AdjacentMineCount { get; set; }
         
 
-        public Tile(bool hasBomb)
+        public Tile(bool hasMine)
         {
-            HasBomb = hasBomb;
+            HasMine = hasMine;
             IsRevealed = false;
-            AdjacentBombCount = 0;
-            IsFlagged = false;
+            AdjacentMineCount = 0;
+            hasFlag = false;
         }
     }
 }

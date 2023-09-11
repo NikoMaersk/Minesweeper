@@ -18,7 +18,7 @@ namespace Minesweeper
         public Tile[,] Tiles { get; private set; }
         private int Rows { get; set; }
         private int Cols { get; set; }
-        private int BombCount { get; set; }
+        private int MineCount { get; set; }
 
         private int _flagCount;
 
@@ -57,12 +57,12 @@ namespace Minesweeper
         }
 
         // Constructor for custom game
-        public Game(int rows, int cols, int bombs)
+        public Game(int rows, int cols, int mines)
         {
             Rows = rows;
             Cols = cols;
-            BombCount = bombs;
-            FlagCount = bombs;
+            MineCount = mines;
+            FlagCount = mines;
 
             ResetBoard();
         }
@@ -88,20 +88,20 @@ namespace Minesweeper
                 case Difficulty.Beginner:
                     Rows = 9;
                     Cols = 9;
-                    BombCount = 10;
+                    MineCount = 10;
                     break;
                 case Difficulty.Intermediate:
                     Rows = 16;
                     Cols = 16;
-                    BombCount = 40;
+                    MineCount = 40;
                     break;
                 case Difficulty.Expert:
                     Rows = 21;
                     Cols = 21;
-                    BombCount = 99;
+                    MineCount = 99;
                     break;
             }
-            FlagCount = BombCount;
+            FlagCount = MineCount;
         }
 
         // Fills the 2D array Tiles with Tile objects
@@ -118,9 +118,9 @@ namespace Minesweeper
         }
 
         // Places a fixed number of bombs on random tiles
-        private void RandomizeBombs()
+        private void RandomizeMines()
         {
-            int bombsRemaining = BombCount;
+            int bombsRemaining = MineCount;
 
             Random rnd = new Random();
             while (bombsRemaining > 0)
@@ -128,31 +128,31 @@ namespace Minesweeper
                 int randomRow = rnd.Next(0, Rows);
                 int randomCol = rnd.Next(0, Cols);
 
-                if (!Tiles[randomRow, randomCol].HasBomb)
+                if (!Tiles[randomRow, randomCol].HasMine)
                 {
-                    Tiles[randomRow, randomCol].HasBomb = true;
+                    Tiles[randomRow, randomCol].HasMine = true;
                     bombsRemaining--;
                 }
             }
         }
 
         // Count the number of adjacent bombs for all tiles and sets the property AdjacentBombCount with this value
-        private void CountAllBombs()
+        private void CountAllMines()
         {
             for (int i = 0; i < this.Rows; i++)
             {
                 for (int j = 0; j < this.Cols; j++)
                 {
-                    if (!this.Tiles[i, j].HasBomb)
+                    if (!this.Tiles[i, j].HasMine)
                     {
-                        this.Tiles[i,j].AdjacentBombCount = CalculateBombScore(i, j);
+                        this.Tiles[i,j].AdjacentMineCount = CalculateMineScore(i, j);
                     }
                 }
             }
         }
 
         // Calculates the adjacent bombs for a specific tile
-        private int CalculateBombScore(int x, int y)
+        private int CalculateMineScore(int x, int y)
         {
             int bombScore = 0;
             for (int dx = -1; dx <= 1; dx++)
@@ -163,7 +163,7 @@ namespace Minesweeper
                     int newY = y + dy;
                     if (ValidatePosition(newX, newY))
                     {
-                        if (Tiles[newX, newY].HasBomb)
+                        if (Tiles[newX, newY].HasMine)
                         {
                             bombScore++;
                         }
@@ -187,10 +187,10 @@ namespace Minesweeper
         public void ResetBoard()
         {
             InitializeBoard();
-            RandomizeBombs();
-            AdjustBombPlacement();
-            CountAllBombs();
-            FlagCount = BombCount;
+            RandomizeMines();
+            AdjustMinePlacement();
+            CountAllMines();
+            FlagCount = MineCount;
         }
 
         // Decrements the flags (Encapsulation)
@@ -209,7 +209,7 @@ namespace Minesweeper
         }
 
         // Moves bombs around to a new random tile, if a tile has more than 3 bombs adjacent. Makes the game easier by creating "islands" of bombs
-        private void AdjustBombPlacement()
+        private void AdjustMinePlacement()
         {
             Random rnd = new Random();
             int maxIterations = 5;
@@ -220,17 +220,17 @@ namespace Minesweeper
                 {
                     for (int j = 0; j < this.Cols; j++)
                     {
-                        if (!Tiles[i, j].HasBomb)
+                        if (!Tiles[i, j].HasMine)
                         {
-                            int bombScore = CalculateBombScore(i, j);
+                            int bombScore = CalculateMineScore(i, j);
                             if (bombScore > 3)
                             {
                                 int randomRow = rnd.Next(0, Rows);
                                 int randomCol = rnd.Next(0, Cols);
 
-                                bool temp = Tiles[i, j].HasBomb;
-                                Tiles[i, j].HasBomb = Tiles[randomRow, randomCol].HasBomb;
-                                Tiles[randomRow, randomCol].HasBomb = temp;
+                                bool temp = Tiles[i, j].HasMine;
+                                Tiles[i, j].HasMine = Tiles[randomRow, randomCol].HasMine;
+                                Tiles[randomRow, randomCol].HasMine = temp;
                             }
                         }
                     }
@@ -248,7 +248,7 @@ namespace Minesweeper
 
             Tiles[x, y].IsRevealed = true;
 
-            if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
+            if (Tiles[x, y].AdjacentMineCount != 0 || Tiles[x, y].HasMine)
             {
                 return;
             }
@@ -275,12 +275,12 @@ namespace Minesweeper
             {
                 var (x, y) = queue.Dequeue();
 
-                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed || Tiles[x,y].IsFlagged)
+                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed || Tiles[x,y].hasFlag)
                     continue;
 
                 Tiles[x, y].IsRevealed = true;
 
-                if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
+                if (Tiles[x, y].AdjacentMineCount != 0 || Tiles[x, y].HasMine)
                     continue;
 
                 int[] xOffset = { -1, 0, 0, 1,};

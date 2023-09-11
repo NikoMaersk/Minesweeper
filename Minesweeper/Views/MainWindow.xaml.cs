@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Data;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -37,7 +34,6 @@ namespace Minesweeper
 
             DataContext = gameBoard;
         }
-
 
         private void CreateGrid(int row, int col)
         {
@@ -91,18 +87,18 @@ namespace Minesweeper
 
             if (e.ChangedButton == MouseButton.Right)
             {
-                if (!gameBoard.Tiles[x, y].IsFlagged && gameBoard.FlagCount > 0)
+                if (!gameBoard.Tiles[x, y].hasFlag && gameBoard.FlagCount > 0)
                 {
                     DrawFlag(button);
                 }
-                else if (gameBoard.Tiles[x, y].IsFlagged)
+                else if (gameBoard.Tiles[x, y].hasFlag)
                 {
                     RemoveFlag(button);
                 }
             }
             else if (e.ChangedButton == MouseButton.Left)
             {
-                if (gameBoard.Tiles[x, y].HasBomb)
+                if (gameBoard.Tiles[x, y].HasMine && !gameBoard.Tiles[x,y].hasFlag)
                 {
                     RevealAll();
                     GameOver();
@@ -126,14 +122,14 @@ namespace Minesweeper
             string imageName = "Flag.png";
             button.SetImage(imageName);
             gameBoard.PlaceFlag();
-            gameBoard.Tiles[button.X, button.Y].IsFlagged = true;
+            gameBoard.Tiles[button.X, button.Y].hasFlag = true;
         }
 
         public void RemoveFlag(ButtonXY button)
         {
             button.Content = "";
             gameBoard.RemoveFlag();
-            gameBoard.Tiles[button.X, button.Y].IsFlagged = false;
+            gameBoard.Tiles[button.X, button.Y].hasFlag = false;
         }
 
         private Button GetButtonAt(int row, int col)
@@ -163,13 +159,13 @@ namespace Minesweeper
                     ButtonXY button = (ButtonXY)GetButtonAt(i, j);
                     button.IsEnabled = false;
 
-                    if (gameBoard.Tiles[i, j].HasBomb)
+                    if (gameBoard.Tiles[i, j].HasMine)
                     {
                         button.SetImage("Mine.png");
                     }
-                    else if (gameBoard.Tiles[i, j].AdjacentBombCount != 0)
+                    else if (gameBoard.Tiles[i, j].AdjacentMineCount != 0)
                     {
-                        button.Content = gameBoard.Tiles[i, j].AdjacentBombCount;
+                        button.Content = gameBoard.Tiles[i, j].AdjacentMineCount;
                     }
                 }
             }
@@ -184,7 +180,7 @@ namespace Minesweeper
             {
                 for (int j = 0; j < col; j++)
                 {
-                    if (!gameBoard.Tiles[i, j].IsRevealed && !gameBoard.Tiles[i, j].HasBomb)
+                    if (!gameBoard.Tiles[i, j].IsRevealed && !gameBoard.Tiles[i, j].HasMine)
                     {
                         return false;
                     }
@@ -208,20 +204,12 @@ namespace Minesweeper
             LbTimer.Content = elapsedTime.ToString(@"mm\:ss");
         }
 
-        // TO DO
-        #region start/end game
-        private void Start()
-        {
-
-        }
-
         private void GameOver()
         {
             gameTimer.Stop();
             elapsedTime = DateTime.MinValue;
             LbTimer.Content = "00:00";
         }
-        #endregion
 
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

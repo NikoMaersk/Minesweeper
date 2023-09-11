@@ -12,19 +12,21 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid>
+        <Grid x:Name="headerGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
+                <ColumnDefinition Width="0.3*"/>
             </Grid.ColumnDefinitions>
-            <ComboBox Height="50">
+            <ComboBox SelectedIndex="0" Height="50" Style="{StaticResource HeaderStyle}" Foreground="Black">
                 <ComboBoxItem Content="Beginner"/>
                 <ComboBoxItem Content="Intermediate"/>
                 <ComboBoxItem Content="Expert"/>
             </ComboBox>
-            <Button x:Name="BtnRestart" Grid.Column="1" Click="BtnRestart_Click" Content="Genstart" FontSize="16" FontWeight="DemiBold"/>
-            <TextBlock x:Name="TbTimer" Grid.Column="2" />
+            <Button x:Name="BtnRestart" Grid.Column="1" Click="BtnRestart_Click" Content="Genstart" Style="{StaticResource HeaderStyle}"/>
+            <Label x:Name="LbTimer" Grid.Column="2" Content="00:00" Style="{StaticResource HeaderStyle}"/>
+            <Button x:Name="BtnSetting" Grid.Column="3" Content="⚙" Style="{StaticResource HeaderStyle}" FontSize="20" Click="BtnSetting_Click"/>
         </Grid>
         <Grid x:Name="grid" Grid.Row="1">
             <!-- Populated with buttons in the code-behind -->

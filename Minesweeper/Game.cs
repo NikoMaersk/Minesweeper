@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Minesweeper
 {
@@ -10,13 +12,22 @@ namespace Minesweeper
         Expert,
     }
 
-    public class Game
+    public class Game : INotifyPropertyChanged
     {
         public Tile[,] Tiles { get; set; }
         private int Rows { get; }
         private int Cols { get; }
         private int Bombs { get; }
         private int Flags { get; set; }
+
+        private DateTime _timeTaken;
+
+        public DateTime TimeTaken
+        {
+            get { return _timeTaken; }
+            set { _timeTaken = value; OnPropertyChanged(); }
+        }
+
 
         #region Constructor
 
@@ -56,6 +67,17 @@ namespace Minesweeper
             Flags = bombs;
 
             ResetBoard();
+        }
+
+        #endregion
+
+        #region Binding
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion
@@ -142,32 +164,6 @@ namespace Minesweeper
             return (x >= 0 && x < this.Rows && y >= 0 && y < this.Cols);
         }
 
-        // Reveals all tiles recursively not already revealed, having no adjacent bombs and does not contain a bomb
-        public void RevealTiles(int x, int y)
-        {
-            if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed)
-            {
-                return;
-            }
-
-            Tiles[x, y].IsRevealed = true;
-
-            if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
-            {
-                return;
-            }
-
-            int[] xOffset = { -1, 0, 0, 1, -1, 1, 1, -1};
-            int[] yOffset = { 0, -1, 1, 0, -1, 1, -1, 1};
-
-            for (int k = 0; k < xOffset.Length; k++)
-            {
-                int newX = x + xOffset[k];
-                int newY = y + yOffset[k];
-
-                RevealTiles(newX, newY);
-            }
-        }
 
         // Clears the Tiles array and initialized a new game
         public void ResetBoard()
@@ -223,6 +219,35 @@ namespace Minesweeper
             }
         }
 
+        // Reveals all tiles recursively not already revealed, having no adjacent bombs and does not contain a bomb
+        public void RevealTiles(int x, int y)
+        {
+            if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed)
+            {
+                return;
+            }
+
+            Tiles[x, y].IsRevealed = true;
+
+            if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
+            {
+                return;
+            }
+
+            int[] xOffset = { -1, 0, 0, 1, -1, 1, 1, -1 };
+            int[] yOffset = { 0, -1, 1, 0, -1, 1, -1, 1 };
+
+            for (int k = 0; k < xOffset.Length; k++)
+            {
+                int newX = x + xOffset[k];
+                int newY = y + yOffset[k];
+
+                RevealTiles(newX, newY);
+            }
+        }
+
+
+
         // Reveals all tiles iteratively not already revealed, having no adjacent bombs and does not contain a bomb. Uses a Breadth-first algorithm
         public void RevealTilesBfs(int startX, int startY)
         {
@@ -233,13 +258,18 @@ namespace Minesweeper
             {
                 var (x, y) = queue.Dequeue();
 
-                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed || Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
+                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed)
                     continue;
 
                 Tiles[x, y].IsRevealed = true;
 
-                int[] xOffset = { -1, 0, 0, 1 };
-                int[] yOffset = { 0, -1, 1, 0 };
+                if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
+                    continue;
+
+                
+
+                int[] xOffset = { -1, 0, 0, 1, -1, 1, 1, -1 };
+                int[] yOffset = { 0, -1, 1, 0, -1, 1, -1, 1 };
 
                 for (int k = 0; k < xOffset.Length; k++)
                 {

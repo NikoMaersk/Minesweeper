@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Minesweeper
 {
@@ -12,32 +11,24 @@ namespace Minesweeper
     /// </summary>
     public partial class MainWindow : Window
     {
-        public Difficulty Difficulty { get; set; }
-        public Game GameBoard { get; set; }
+        private Difficulty difficulty;
+        private Game gameBoard;
+        private DispatcherTimer gameTimer;
+        private DateTime elapsedTime;
 
         public MainWindow()
         {
             InitializeComponent();
-            Difficulty = Difficulty.Beginner;
-            GameBoard = new(Difficulty);
+            difficulty = Difficulty.Intermediate;
+            gameBoard = new(difficulty);
 
-            int row = GameBoard.Tiles.GetLength(0);
-            int col = GameBoard.Tiles.GetLength(1);
+            int row = gameBoard.Tiles.GetLength(0);
+            int col = gameBoard.Tiles.GetLength(1);
             CreateGrid(row, col);
 
-
-
-            /*
-            ValueTuple<int, int, string> test = (5, 3, "mojn");
-
-            (int, int, string) test2 = (5, 3, "mojn");
-
-            var test3 = (5, 3, "mojn");
-
-            var (x, y, s) = (5, 3, "mojn");
-
-            string greet = s;
-            */
+            gameTimer = new DispatcherTimer();
+            gameTimer.Interval = TimeSpan.FromSeconds(1);
+            gameTimer.Tick += GameTimer_Tick;
         }
 
 
@@ -74,19 +65,39 @@ namespace Minesweeper
                     Grid.SetRow(button, i);
                     grid.Children.Add(button);
 
-                    Tile currentTile = GameBoard.Tiles[i,j];
+                    Tile currentTile = gameBoard.Tiles[i,j];
                 }
             }
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            if (!gameTimer.IsEnabled)
+            {
+                gameTimer.Start();
+            }
+
             ButtonXY button = sender as ButtonXY;
             int x = button.X;
             int y = button.Y;
 
-            GameBoard.RevealTiles(x, y);
+            
+            await Task.Run(() =>
+            {
+                gameBoard.RevealTilesBfs(x, y);
+
+                Dispatcher.Invoke(() =>
+                {
+                    RevealAll();
+                });
+            });
+            
+
+            
+            /*
+            gameBoard.RevealTiles(x, y);
             RevealAll();
+            */
         }
 
         private Button GetButtonAt(int row, int col)
@@ -104,27 +115,27 @@ namespace Minesweeper
 
         private void RevealAll()
         {
-            int row = GameBoard.Tiles.GetLength(0);
-            int col = GameBoard.Tiles.GetLength(1);
+            int row = gameBoard.Tiles.GetLength(0);
+            int col = gameBoard.Tiles.GetLength(1);
 
             for (int i = 0; i < row; i++)
             {
                 for (int j = 0; j < col; j++)
                 {
-                    if (!GameBoard.Tiles[i, j].IsRevealed) continue;
+                    if (!gameBoard.Tiles[i, j].IsRevealed) continue;
 
                     ButtonXY button = (ButtonXY)GetButtonAt(i, j);
                     button.IsEnabled = false;
 
-                    if (GameBoard.Tiles[i,j].HasBomb)
+                    if (gameBoard.Tiles[i,j].HasBomb)
                     {
                         button.Content = "\uD83C\uDF4F";
-                        button.SetImage("Images/Mine.png");
+                        //button.SetImage("Images/Mine.png");
                         
                     }
-                    else if (GameBoard.Tiles[i, j].AdjacentBombCount != 0)
+                    else if (gameBoard.Tiles[i, j].AdjacentBombCount != 0)
                     {
-                        button.Content = GameBoard.Tiles[i, j].AdjacentBombCount;
+                        button.Content = gameBoard.Tiles[i, j].AdjacentBombCount;
                     }
                 }
             }
@@ -132,9 +143,38 @@ namespace Minesweeper
 
         private void BtnRestart_Click(object sender, RoutedEventArgs e)
         {
-            GameBoard.ResetBoard();
+            GameOver();
             grid.Children.Clear();
-            AddButtons(GameBoard.Tiles.GetLength(0), GameBoard.Tiles.GetLength(1));
+            AddButtons(gameBoard.Tiles.GetLength(0), gameBoard.Tiles.GetLength(1));
+        }
+
+      
+
+        private void GameTimer_Tick(object sender, EventArgs e)
+        {
+            elapsedTime = elapsedTime.Add(TimeSpan.FromSeconds(1));
+            LbTimer.Content = elapsedTime.ToString(@"mm\:ss");
+        }
+
+        // TO DO
+        #region start/end game
+        private void Start()
+        {
+
+        }
+
+        private void GameOver()
+        {
+            gameTimer.Stop();
+            elapsedTime = DateTime.MinValue;
+            LbTimer.Content = "00:00";
+            gameBoard.ResetBoard();
+        }
+        #endregion
+
+        private void BtnSetting_Click(object sender, RoutedEventArgs e)
+        {
+            gameTimer.Stop();
         }
     }
 }

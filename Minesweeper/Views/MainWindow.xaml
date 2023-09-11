@@ -3,33 +3,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Minesweeper"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="800"
         x:Name="window">
+    <Window.Resources>
+        <local:DifficultyConverter x:Key="DifficultyConverter"/>
+        <local:ModalDialogBox x:Key="customModalDialog" Visibility="Collapsed"/>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
         <Grid x:Name="headerGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="0.3*"/>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.5*"/>
             </Grid.ColumnDefinitions>
-            <ComboBox SelectedIndex="0" Height="50" Style="{StaticResource HeaderStyle}" Foreground="Black">
+            <ComboBox SelectedIndex="0" Height="50" Style="{StaticResource HeaderStyle}" Foreground="Black" SelectionChanged="ComboBox_SelectionChanged">
                 <ComboBoxItem Content="Beginner"/>
                 <ComboBoxItem Content="Intermediate"/>
                 <ComboBoxItem Content="Expert"/>
             </ComboBox>
-            <Button x:Name="BtnRestart" Grid.Column="1" Click="BtnRestart_Click" Content="Genstart" Style="{StaticResource HeaderStyle}"/>
+            <Button x:Name="BtnRestart" Grid.Column="1" Click="BtnRestart_Click" Content="Restart" Style="{StaticResource HeaderStyle}"/>
             <Label x:Name="LbTimer" Grid.Column="2" Content="00:00" Style="{StaticResource HeaderStyle}"/>
-            <Button x:Name="BtnSetting" Grid.Column="3" Content="⚙" Style="{StaticResource HeaderStyle}" FontSize="20" Click="BtnSetting_Click"/>
+            <Label x:Name="lbFlagCount" Grid.Column="3" Style="{StaticResource HeaderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="../Images/Flag.png" Width="25" Height="25" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding FlagCount}" VerticalAlignment="Center" Margin="5,0,0,0" />
+                </StackPanel>
+            </Label>
         </Grid>
         <Grid x:Name="grid" Grid.Row="1">
             <!-- Populated with buttons in the code-behind -->
         </Grid>
+        <local:ModalDialogBox x:Name="ModalDialog" Grid.Row="0" Grid.RowSpan="2" NewGameClicked="CustomModalDialog_NewGameClicked"/>
     </Grid>
 </Window>

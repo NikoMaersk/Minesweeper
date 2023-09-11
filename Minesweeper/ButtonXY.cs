@@ -21,9 +21,8 @@ namespace Minesweeper
             Image image = new Image();
             try
             {
-                image.Source = new BitmapImage(new Uri(path, UriKind.Relative));
+                image.Source = new BitmapImage(new Uri($"../Images/{path}", UriKind.Relative));
                 image.Height = 30;
-                image.Opacity = 0.8;
                 this.Content = image;
             }
             catch (Exception ex)

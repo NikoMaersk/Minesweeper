@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Minesweeper
@@ -14,18 +15,34 @@ namespace Minesweeper
 
     public class Game : INotifyPropertyChanged
     {
-        public Tile[,] Tiles { get; set; }
-        private int Rows { get; }
-        private int Cols { get; }
-        private int Bombs { get; }
-        private int Flags { get; set; }
+        public Tile[,] Tiles { get; private set; }
+        private int Rows { get; set; }
+        private int Cols { get; set; }
+        private int BombCount { get; set; }
 
-        private DateTime _timeTaken;
+        private int _flagCount;
 
-        public DateTime TimeTaken
+        public int FlagCount
         {
-            get { return _timeTaken; }
-            set { _timeTaken = value; OnPropertyChanged(); }
+            get { return _flagCount; }
+            set { _flagCount = value; OnPropertyChanged(); }
+        }
+
+        private Difficulty _selectedDifficulty;
+
+        public Difficulty SelectedDifficulty
+        {
+            get { return _selectedDifficulty; }
+            set
+            {
+                if (_selectedDifficulty != value)
+                {
+                    _selectedDifficulty = value;
+                    OnPropertyChanged();
+                    SetDifficulty();
+                    ResetBoard();
+                }
+            }
         }
 
 
@@ -34,27 +51,8 @@ namespace Minesweeper
         // Constructor for default difficulties
         public Game(Difficulty diff)
         {
-            switch(diff)
-            {
-                case Difficulty.Beginner: 
-                    Rows = 9; 
-                    Cols = 9; 
-                    Bombs = 10; 
-                    break;
-                case Difficulty.Intermediate: 
-                    Rows = 16; 
-                    Cols = 16; 
-                    Bombs = 40; 
-                    break;
-                case Difficulty.Expert: 
-                    Rows = 21;
-                    Cols = 21;
-                    Bombs = 99;  
-                    break;
-            }
-
-            Flags = Bombs;
-
+            SelectedDifficulty = diff;
+            SetDifficulty();
             ResetBoard();
         }
 
@@ -63,8 +61,8 @@ namespace Minesweeper
         {
             Rows = rows;
             Cols = cols;
-            Bombs = bombs;
-            Flags = bombs;
+            BombCount = bombs;
+            FlagCount = bombs;
 
             ResetBoard();
         }
@@ -82,6 +80,30 @@ namespace Minesweeper
 
         #endregion
 
+        #region Initializers
+        private void SetDifficulty()
+        {
+            switch (SelectedDifficulty)
+            {
+                case Difficulty.Beginner:
+                    Rows = 9;
+                    Cols = 9;
+                    BombCount = 10;
+                    break;
+                case Difficulty.Intermediate:
+                    Rows = 16;
+                    Cols = 16;
+                    BombCount = 40;
+                    break;
+                case Difficulty.Expert:
+                    Rows = 21;
+                    Cols = 21;
+                    BombCount = 99;
+                    break;
+            }
+            FlagCount = BombCount;
+        }
+
         // Fills the 2D array Tiles with Tile objects
         private void InitializeBoard()
         {
@@ -98,7 +120,7 @@ namespace Minesweeper
         // Places a fixed number of bombs on random tiles
         private void RandomizeBombs()
         {
-            int bombsRemaining = Bombs;
+            int bombsRemaining = BombCount;
 
             Random rnd = new Random();
             while (bombsRemaining > 0)
@@ -129,13 +151,6 @@ namespace Minesweeper
             }
         }
 
-        /// <summary>
-        /// Calculates the number of bombs around a tile
-        /// </summary>
-        /// <param name="x"></param> the x-position in a 2D array
-        /// <param name="y"></param> the y-position in a 2D array
-        /// <returns></returns> the number of bombs surrounding a given tile
-
         // Calculates the adjacent bombs for a specific tile
         private int CalculateBombScore(int x, int y)
         {
@@ -158,6 +173,9 @@ namespace Minesweeper
             return bombScore;
         }
 
+        #endregion
+
+
         // Checks if the x and y are within bounds of the gameboard
         private bool ValidatePosition(int x, int y)
         {
@@ -172,21 +190,22 @@ namespace Minesweeper
             RandomizeBombs();
             AdjustBombPlacement();
             CountAllBombs();
+            FlagCount = BombCount;
         }
 
         // Decrements the flags (Encapsulation)
         public void PlaceFlag()
         {
-            if (Flags > 0)
+            if (FlagCount > 0)
             {
-                Flags--;
+                FlagCount--;
             }
         }
 
         // Increments the flag (Encapsulation)
         public void RemoveFlag()
         {
-            Flags++;
+            FlagCount++;
         }
 
         // Moves bombs around to a new random tile, if a tile has more than 3 bombs adjacent. Makes the game easier by creating "islands" of bombs
@@ -246,8 +265,6 @@ namespace Minesweeper
             }
         }
 
-
-
         // Reveals all tiles iteratively not already revealed, having no adjacent bombs and does not contain a bomb. Uses a Breadth-first algorithm
         public void RevealTilesBfs(int startX, int startY)
         {
@@ -258,7 +275,7 @@ namespace Minesweeper
             {
                 var (x, y) = queue.Dequeue();
 
-                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed)
+                if (!ValidatePosition(x, y) || Tiles[x, y].IsRevealed || Tiles[x,y].IsFlagged)
                     continue;
 
                 Tiles[x, y].IsRevealed = true;
@@ -266,10 +283,8 @@ namespace Minesweeper
                 if (Tiles[x, y].AdjacentBombCount != 0 || Tiles[x, y].HasBomb)
                     continue;
 
-                
-
-                int[] xOffset = { -1, 0, 0, 1, -1, 1, 1, -1 };
-                int[] yOffset = { 0, -1, 1, 0, -1, 1, -1, 1 };
+                int[] xOffset = { -1, 0, 0, 1,};
+                int[] yOffset = { 0, -1, 1, 0,};
 
                 for (int k = 0; k < xOffset.Length; k++)
                 {

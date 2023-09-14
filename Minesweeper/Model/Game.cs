@@ -283,8 +283,8 @@ namespace Minesweeper
                 if (Tiles[x, y].AdjacentMineCount != 0 || Tiles[x, y].HasMine)
                     continue;
 
-                int[] xOffset = { -1, 0, 0, 1,};
-                int[] yOffset = { 0, -1, 1, 0,};
+                int[] xOffset = { -1, 0, 0, 1, -1, 1, 1, -1 };
+                int[] yOffset = { 0, -1, 1, 0, -1, 1, -1, 1 };
 
                 for (int k = 0; k < xOffset.Length; k++)
                 {
